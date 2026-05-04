@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import json
 from datetime import datetime
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,11 +22,33 @@ def cargar():
         return {}
 
 
+def guardar(data):
+    with open("datos.json", "w") as f:
+        json.dump(data, f, indent=4)
+
+
+def hoy():
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def asegurar_usuario(data, user):
+    if user not in data:
+        data[user] = {
+            "apm": {"puntos": 0, "record": 0, "ultimo_envio": ""},
+            "key": {"puntos": 0, "record": 0, "ultimo_envio": ""},
+            "aim": {"puntos": 0, "record": 0, "ultimo_envio": ""}
+        }
+
+
+def puede_enviar(data, user, tipo):
+    return data[user][tipo]["ultimo_envio"] != hoy()
+
+
 # ---------------- COMANDOS ---------------- #
 
 @bot.command()
 async def dapm(ctx, valor: int):
-if not ctx.message.attachments:
+    if not ctx.message.attachments:
         await ctx.send("❌ Tenés que subir una captura.")
         return
 
@@ -44,28 +67,29 @@ if not ctx.message.attachments:
         data[user]["apm"]["record"] = valor
 
     guardar(data)
+
     mensaje = f"✅ {ctx.author.mention} registró {valor} APM 🔥\n"
 
-if 150 <= valor <= 180:
-    mensaje += "😮‍💨 Uff... necesitas trabajo por hacer."
-elif 181 <= valor <= 250:
-    mensaje += "🔥 Seguí así, aún queda camino."
-elif 251 <= valor <= 349:
-    mensaje += "🚀 Solo un poco más!"
-elif 350 <= valor <= 399:
-    mensaje += "💪 Estás en óptimas condiciones!"
-elif valor >= 400:
-    mensaje += "🥷 Manos asiáticas detectadas."
-else:
-    mensaje += "🌱 Empezando el camino, seguí metiéndole."
+    if 150 <= valor <= 180:
+        mensaje += "😮‍💨 Uff... necesitas trabajo por hacer."
+    elif 181 <= valor <= 250:
+        mensaje += "🔥 Seguí así, aún queda camino."
+    elif 251 <= valor <= 349:
+        mensaje += "🚀 Solo un poco más!"
+    elif 350 <= valor <= 399:
+        mensaje += "💪 Estás en óptimas condiciones!"
+    elif valor >= 400:
+        mensaje += "🥷 Manos asiáticas detectadas."
+    else:
+        mensaje += "🌱 Empezando el camino, seguí metiéndole."
 
-mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
+    mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
 
-msg = await ctx.send(mensaje)
+    msg = await ctx.send(mensaje)
 
-await msg.add_reaction("🔥")
-await msg.add_reaction("🥸")
-await msg.add_reaction("❓")
+    await msg.add_reaction("🔥")
+    await msg.add_reaction("🥸")
+    await msg.add_reaction("❓")
 
 
 @bot.command()
@@ -89,31 +113,32 @@ async def dkey(ctx, valor: int):
         data[user]["key"]["record"] = valor
 
     guardar(data)
+
     mensaje = f"✅ {ctx.author.mention} registró {valor} KeyReaction ⚡\n"
 
-if valor >= 500:
-    mensaje += "💀 Tienes cosas en común con mi tatarabuelo."
-elif 450 <= valor <= 499:
-    mensaje += "🔥 Vas por el buen camino invocador."
-elif 400 <= valor <= 449:
-    mensaje += "💪 Gracias por tu esfuerzo, sigue así."
-elif 351 <= valor <= 399:
-    mensaje += "🐱 Humano o felino?"
-elif 200 <= valor <= 350:
-    mensaje += "⚠️ No me gustaría tradear habilidades contigo."
-else:
-    mensaje += "🌱 Seguís en desarrollo, no aflojes."
+    if valor >= 500:
+        mensaje += "💀 Tienes cosas en común con mi tatarabuelo."
+    elif 450 <= valor <= 499:
+        mensaje += "🔥 Vas por el buen camino invocador."
+    elif 400 <= valor <= 449:
+        mensaje += "💪 Gracias por tu esfuerzo, sigue así."
+    elif 351 <= valor <= 399:
+        mensaje += "🐱 Humano o felino?"
+    elif 200 <= valor <= 350:
+        mensaje += "⚠️ No me gustaría tradear habilidades contigo."
+    else:
+        mensaje += "🌱 Seguís en desarrollo, no aflojes."
 
-mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
+    mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
 
-msg = await ctx.send(mensaje)
+    msg = await ctx.send(mensaje)
 
-await msg.add_reaction("🔥")
-await msg.add_reaction("🥸")
-await msg.add_reaction("❓")
+    await msg.add_reaction("🔥")
+    await msg.add_reaction("🥸")
+    await msg.add_reaction("❓")
 
 
-    @bot.command()
+@bot.command()
 async def daim(ctx, nivel: int, porcentaje: int):
     if not ctx.message.attachments:
         await ctx.send("❌ Tenés que subir una captura.")
@@ -146,22 +171,11 @@ async def daim(ctx, nivel: int, porcentaje: int):
     mensaje = f"✅ {ctx.author.mention} registró Nivel {nivel} - {porcentaje}% 🎯\n"
 
     if 1 <= nivel <= 5:
-        if porcentaje <= 90:
-            mensaje += "😮‍💨 Sigue esforzándote."
-        else:
-            mensaje += "🔥 Sube al siguiente nivel!"
-
+        mensaje += "😮‍💨 Sigue esforzándote." if porcentaje <= 90 else "🔥 Sube al siguiente nivel!"
     elif 6 <= nivel <= 9:
-        if porcentaje <= 80:
-            mensaje += "💪 Puede que estés un tiempo en esta categoría, no te desanimes!"
-        else:
-            mensaje += "🚀 Sube al siguiente nivel!"
-
+        mensaje += "💪 Puede que estés en esta categoría, no te desanimes!" if porcentaje <= 80 else "🚀 Sube al siguiente nivel!"
     elif nivel == 10:
-        if porcentaje <= 80:
-            mensaje += "⏳ Estás en la habitación del tiempo, no dejes de intentarlo."
-        else:
-            mensaje += "💀 Un verdadero jugador profesional!"
+        mensaje += "⏳ Estás en la habitación del tiempo, no dejes de intentarlo." if porcentaje <= 80 else "💀 Un verdadero jugador profesional!"
 
     mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
 
@@ -192,10 +206,7 @@ async def ranking(ctx, tipo):
 
     for i, (user_id, stats) in enumerate(ranking_ordenado[:10], start=1):
         usuario = await bot.fetch_user(int(user_id))
-        puntos = stats[tipo]["puntos"]
-        record = stats[tipo]["record"]
-
-        mensaje += f"{i}. {usuario.name} | {puntos} pts | récord {record}\n"
+        mensaje += f"{i}. {usuario.name} | {stats[tipo]['puntos']} pts | récord {stats[tipo]['record']}\n"
 
     await ctx.send(mensaje)
 
@@ -212,11 +223,7 @@ async def me(ctx):
         return
 
     def posicion(tipo):
-        ranking = sorted(
-            data.items(),
-            key=lambda x: x[1][tipo]["puntos"],
-            reverse=True
-        )
+        ranking = sorted(data.items(), key=lambda x: x[1][tipo]["puntos"], reverse=True)
         for i, (uid, _) in enumerate(ranking, start=1):
             if uid == user:
                 return i
@@ -262,11 +269,9 @@ async def top(ctx):
 
     ranking_global = sorted(
         data.items(),
-        key=lambda x: (
-            x[1]["apm"]["puntos"] +
-            x[1]["key"]["puntos"] +
-            x[1]["aim"]["puntos"]
-        ),
+        key=lambda x: x[1]["apm"]["puntos"] +
+                      x[1]["key"]["puntos"] +
+                      x[1]["aim"]["puntos"],
         reverse=True
     )
 
@@ -274,12 +279,7 @@ async def top(ctx):
 
     for i, (user_id, stats) in enumerate(ranking_global[:10], start=1):
         usuario = await bot.fetch_user(int(user_id))
-        total = (
-            stats["apm"]["puntos"] +
-            stats["key"]["puntos"] +
-            stats["aim"]["puntos"]
-        )
-
+        total = stats["apm"]["puntos"] + stats["key"]["puntos"] + stats["aim"]["puntos"]
         mensaje += f"{i}. {usuario.name} | {total} pts\n"
 
     await ctx.send(mensaje)
@@ -292,5 +292,4 @@ async def on_ready():
     print(f"Bot conectado como {bot.user}")
 
 
-import os
 bot.run(os.getenv("TOKEN"))
