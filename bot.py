@@ -25,7 +25,7 @@ def cargar():
 
 @bot.command()
 async def dapm(ctx, valor: int):
-    if len(ctx.message.attachments) == 0:
+if not ctx.message.attachments:
         await ctx.send("❌ Tenés que subir una captura.")
         return
 
@@ -44,12 +44,33 @@ async def dapm(ctx, valor: int):
         data[user]["apm"]["record"] = valor
 
     guardar(data)
-    await ctx.send(f"✅ {ctx.author.mention} registró {valor} APM 🔥")
+    mensaje = f"✅ {ctx.author.mention} registró {valor} APM 🔥\n"
+
+if 150 <= valor <= 180:
+    mensaje += "😮‍💨 Uff... necesitas trabajo por hacer."
+elif 181 <= valor <= 250:
+    mensaje += "🔥 Seguí así, aún queda camino."
+elif 251 <= valor <= 349:
+    mensaje += "🚀 Solo un poco más!"
+elif 350 <= valor <= 399:
+    mensaje += "💪 Estás en óptimas condiciones!"
+elif valor >= 400:
+    mensaje += "🥷 Manos asiáticas detectadas."
+else:
+    mensaje += "🌱 Empezando el camino, seguí metiéndole."
+
+mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
+
+msg = await ctx.send(mensaje)
+
+await msg.add_reaction("🔥")
+await msg.add_reaction("🥸")
+await msg.add_reaction("❓")
 
 
 @bot.command()
 async def dkey(ctx, valor: int):
-    if len(ctx.message.attachments) == 0:
+    if not ctx.message.attachments:
         await ctx.send("❌ Tenés que subir una captura.")
         return
 
@@ -68,13 +89,42 @@ async def dkey(ctx, valor: int):
         data[user]["key"]["record"] = valor
 
     guardar(data)
-    await ctx.send(f"✅ {ctx.author.mention} registró {valor} KeyReaction ⚡")
+    mensaje = f"✅ {ctx.author.mention} registró {valor} KeyReaction ⚡\n"
+
+if valor >= 500:
+    mensaje += "💀 Tienes cosas en común con mi tatarabuelo."
+elif 450 <= valor <= 499:
+    mensaje += "🔥 Vas por el buen camino invocador."
+elif 400 <= valor <= 449:
+    mensaje += "💪 Gracias por tu esfuerzo, sigue así."
+elif 351 <= valor <= 399:
+    mensaje += "🐱 Humano o felino?"
+elif 200 <= valor <= 350:
+    mensaje += "⚠️ No me gustaría tradear habilidades contigo."
+else:
+    mensaje += "🌱 Seguís en desarrollo, no aflojes."
+
+mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
+
+msg = await ctx.send(mensaje)
+
+await msg.add_reaction("🔥")
+await msg.add_reaction("🥸")
+await msg.add_reaction("❓")
 
 
-@bot.command()
-async def daim(ctx, valor: int):
-    if len(ctx.message.attachments) == 0:
-        await ctx.send("❌ Tenés que subir una captura que validé tu información.")
+    @bot.command()
+async def daim(ctx, nivel: int, porcentaje: int):
+    if not ctx.message.attachments:
+        await ctx.send("❌ Tenés que subir una captura.")
+        return
+
+    if nivel < 1 or nivel > 10:
+        await ctx.send("❌ Nivel inválido (1 a 10).")
+        return
+
+    if porcentaje < 0 or porcentaje > 100:
+        await ctx.send("❌ Porcentaje inválido (0 a 100).")
         return
 
     data = cargar()
@@ -85,14 +135,41 @@ async def daim(ctx, valor: int):
         await ctx.send("❌ Ya enviaste Aim hoy.")
         return
 
-    data[user]["aim"]["puntos"] += valor
+    data[user]["aim"]["puntos"] += porcentaje
     data[user]["aim"]["ultimo_envio"] = hoy()
 
-    if valor > data[user]["aim"]["record"]:
-        data[user]["aim"]["record"] = valor
+    if porcentaje > data[user]["aim"]["record"]:
+        data[user]["aim"]["record"] = porcentaje
 
     guardar(data)
-    await ctx.send(f"✅ {ctx.author.mention} registró {valor} Aim 🎯")
+
+    mensaje = f"✅ {ctx.author.mention} registró Nivel {nivel} - {porcentaje}% 🎯\n"
+
+    if 1 <= nivel <= 5:
+        if porcentaje <= 90:
+            mensaje += "😮‍💨 Sigue esforzándote."
+        else:
+            mensaje += "🔥 Sube al siguiente nivel!"
+
+    elif 6 <= nivel <= 9:
+        if porcentaje <= 80:
+            mensaje += "💪 Puede que estés un tiempo en esta categoría, no te desanimes!"
+        else:
+            mensaje += "🚀 Sube al siguiente nivel!"
+
+    elif nivel == 10:
+        if porcentaje <= 80:
+            mensaje += "⏳ Estás en la habitación del tiempo, no dejes de intentarlo."
+        else:
+            mensaje += "💀 Un verdadero jugador profesional!"
+
+    mensaje += "\n\n📅 Daily registrado. Volvé mañana para seguir subiendo en el ranking."
+
+    msg = await ctx.send(mensaje)
+
+    await msg.add_reaction("🔥")
+    await msg.add_reaction("🥸")
+    await msg.add_reaction("❓")
 
 
 # ---------------- RANKINGS ---------------- #
